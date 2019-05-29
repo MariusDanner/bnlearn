@@ -61,10 +61,10 @@ double c_chisqtest(int *xx, int llx, int *yy, int lly, int num, double *df,
     res = mi_kernel(n, ni, nj, llx, lly, ncomplete) / ncomplete;
   else if ((test == X2) || (test == X2_ADF))
     res = x2_kernel(n, ni, nj, llx, lly, ncomplete);
-  stat = clock();
   /* rescale to match the G^2 test. */
   if (scale)
     res *= 2 * ncomplete;
+  stat = clock();
 
 free_and_return:
 
@@ -117,10 +117,10 @@ double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     res = cmi_kernel(n, ni, nj, nk, llx, lly, llz) / ncomplete;
   else if ((test == X2) || (test == X2_ADF))
     res = cx2_kernel(n, ni, nj, nk, llx, lly, llz);
-  stat = clock();
   /* rescale to match the G^2 test. */
   if (scale)
     res *= 2 * ncomplete;
+  stat = clock();
 
 free_and_return:
 
