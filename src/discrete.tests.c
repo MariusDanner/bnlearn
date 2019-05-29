@@ -1,5 +1,6 @@
 #include "include/rcore.h"
 #include "include/tests.h"
+#include "time.h"
 
 #define MI_PART(cell, xmarg, ymarg, zmarg) \
   ((cell) == 0 ? 0 : \
@@ -31,12 +32,15 @@ SEXP result;
 double c_chisqtest(int *xx, int llx, int *yy, int lly, int num, double *df,
     test_e test, int scale) {
 
-int **n = NULL, *ni = NULL, *nj = NULL, ncomplete = 0, adj = IS_ADF(test);
-double res = 0;
+  clock_t start, end, setup, conting, checks, cleanup, stat;
+  start = clock();
+  int **n = NULL, *ni = NULL, *nj = NULL, ncomplete = 0, adj = IS_ADF(test);
+  double res = 0;
+  setup = clock();
 
   /* initialize the contingency table and the marginal frequencies. */
   ncomplete = fill_2d_table(xx, yy, &n, &ni, &nj, llx, lly, num);
-
+  conting = clock();
   /* compute the degrees of freedom. */
   if (df)
     *df = adj ? df_adjust(ni, llx, nj, lly) : (llx - 1) * (lly - 1);
@@ -51,12 +55,13 @@ double res = 0;
     if (ncomplete < 5 * llx * lly)
       goto free_and_return;
 
+  checks = clock();
   /* compute the mutual information or Pearson's X^2. */
   if ((test == MI) || (test == MI_ADF))
     res = mi_kernel(n, ni, nj, llx, lly, ncomplete) / ncomplete;
   else if ((test == X2) || (test == X2_ADF))
     res = x2_kernel(n, ni, nj, llx, lly, ncomplete);
-
+  stat = clock();
   /* rescale to match the G^2 test. */
   if (scale)
     res *= 2 * ncomplete;
@@ -66,7 +71,15 @@ free_and_return:
   Free2D(n, llx);
   Free1D(ni);
   Free1D(nj);
-
+  cleanup = clock();
+  double time1 = ((double) (setup - start)) / CLOCKS_PER_SEC;
+  double time2 = ((double) (conting - setup)) / CLOCKS_PER_SEC;
+  double time3 = ((double) (checks - conting)) / CLOCKS_PER_SEC;
+  double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
+  double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
+  FILE *fp = fopen("ci_benchmark.csv", "a");
+  fprintf(fp, "%f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
+  fclose(fp);
   return res;
 
 }/*C_CHISQTEST*/
@@ -75,13 +88,16 @@ free_and_return:
 double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale) {
 
-int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
-int ncomplete = 0, adj = IS_ADF(test);
-double res = 0;
+  clock_t start, end, setup, conting, checks, cleanup, stat;
+  start = clock();
+  int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
+  int ncomplete = 0, adj = IS_ADF(test);
+  double res = 0;
 
+  setup = clock();
    /* initialize the contingency table and the marginal frequencies. */
    ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
-
+  conting = clock();
   /* compute the degrees of freedom. */
   if (df)
     *df = adj ? cdf_adjust(ni, llx, nj, lly, llz) : (llx - 1) * (lly - 1) * llz;
@@ -95,13 +111,13 @@ double res = 0;
   if (adj)
     if (ncomplete < 5 * llx * lly * llz)
       goto free_and_return;
-
+  checks = clock();
   /* compute the conditional mutual information or Pearson's X^2. */
   if ((test == MI) || (test == MI_ADF))
     res = cmi_kernel(n, ni, nj, nk, llx, lly, llz) / ncomplete;
   else if ((test == X2) || (test == X2_ADF))
     res = cx2_kernel(n, ni, nj, nk, llx, lly, llz);
-
+  stat = clock();
   /* rescale to match the G^2 test. */
   if (scale)
     res *= 2 * ncomplete;
@@ -112,7 +128,15 @@ free_and_return:
   Free2D(ni, llz);
   Free2D(nj, llz);
   Free1D(nk);
-
+  cleanup = clock();
+  double time1 = ((double) (setup - start)) / CLOCKS_PER_SEC;
+  double time2 = ((double) (conting - setup)) / CLOCKS_PER_SEC;
+  double time3 = ((double) (checks - conting)) / CLOCKS_PER_SEC;
+  double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
+  double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
+  FILE *fp = fopen("ci_benchmark.csv", "a");
+  fprintf(fp, "%f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
+  fclose(fp);
   return res;
 
 }/*C_CCHISQTEST*/
@@ -197,4 +221,3 @@ double expected = 0, res = 0;
   return res;
 
 }/*CX2_KERNEL*/
-
