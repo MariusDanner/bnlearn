@@ -85,7 +85,7 @@ ddata dt = { 0 }, sub = { 0 };
         const char* string_x = CHAR(STRING_ELT(x,0));
         const char* string_y = CHAR(STRING_ELT(y,0));
         const char* string_sx = CHAR(STRING_ELT(sx,0));
-        statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df,
+        statistic = c_cchisqtest_better(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df,
                       test, (test == MI) || (test == MI_ADF), string_x, string_y, string_sx, LENGTH(sx));
         PVALUE(pchisq(statistic, df, FALSE, FALSE));
 
@@ -382,7 +382,7 @@ cgdata dt = { 0 }, sub = { 0 };
 
           /* if both nodes are discrete, the test reverts back to a discrete
            * mutual information test. */
-          statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs,
+          statistic = c_cchisqtest_better(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs,
                         &df, MI, TRUE, CHAR(STRING_ELT(x,0)),CHAR(STRING_ELT(y,0)),CHAR(STRING_ELT(sx,0)), LENGTH(sx));
 
         }/*ELSE*/

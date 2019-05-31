@@ -99,9 +99,69 @@ free_and_return:
 
 */
 
-double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
+double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, const char *x, const char *y, const char* sx, int sepset_length) {
   Rprintf("%s %s, %s %d\n", x, y, sx, sepset_length);
+  clock_t start, end, setup, conting, checks, cleanup, stat;
+  start = clock();
+  int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
+  int ncomplete = 0, adj = IS_ADF(test);
+  double res = 0;
+  // Rprintf("%d %d %d\n", *xx, *yy, *zz);
+  // for (int i = 0; i < num; i++) {
+  //   Rprintf("%d ", xx[i]);
+  // }
+  // Rprintf("\n-- %d %d %d\n", llx, lly, llz);
+  // Rprintf("num: %d scale: %d\n",num, scale);
+  setup = clock();
+   /* initialize the contingency table and the marginal frequencies. */
+   ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
+  conting = clock();
+  /* compute the degrees of freedom. */
+  if (df)
+    *df = adj ? cdf_adjust(ni, llx, nj, lly, llz) : (llx - 1) * (lly - 1) * llz;
+
+  /* if there are no complete data points, return independence. */
+  if (ncomplete == 0)
+    goto free_and_return;
+
+  /* if there are less than 5 observations per cell on average, assume the
+   * test does not have enough power and return independence. */
+  if (adj)
+    if (ncomplete < 5 * llx * lly * llz)
+      goto free_and_return;
+  checks = clock();
+  /* compute the conditional mutual information or Pearson's X^2. */
+  if ((test == MI) || (test == MI_ADF))
+    res = cmi_kernel(n, ni, nj, nk, llx, lly, llz) / ncomplete;
+  else if ((test == X2) || (test == X2_ADF))
+    res = cx2_kernel(n, ni, nj, nk, llx, lly, llz);
+  /* rescale to match the G^2 test. */
+  if (scale)
+    res *= 2 * ncomplete;
+  stat = clock();
+
+free_and_return:
+
+  Free3D(n, llz, llx);
+  Free2D(ni, llz);
+  Free2D(nj, llz);
+  Free1D(nk);
+  cleanup = clock();
+  double time1 = ((double) (setup - start)) / CLOCKS_PER_SEC;
+  double time2 = ((double) (conting - setup)) / CLOCKS_PER_SEC;
+  double time3 = ((double) (checks - conting)) / CLOCKS_PER_SEC;
+  double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
+  double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
+  FILE *fp = fopen("ci_benchmark.csv", "a");
+  fprintf(fp, "%f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
+  fclose(fp);
+  return res;
+
+}
+
+double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
+    int num, double *df, test_e test, int scale) {
   clock_t start, end, setup, conting, checks, cleanup, stat;
   start = clock();
   int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
