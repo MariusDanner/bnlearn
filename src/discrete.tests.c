@@ -1,11 +1,13 @@
 #include "include/rcore.h"
 #include "include/tests.h"
 #include "time.h"
+#include "include/rcore.h"
 
 #define MI_PART(cell, xmarg, ymarg, zmarg) \
   ((cell) == 0 ? 0 : \
     ((double)(cell)) * log(((double)(cell)) * ((double)(zmarg)) / \
     (((double)(xmarg)) * ((double)(ymarg)))))
+
 
 /* unconditional mutual information, to be used for the asymptotic test. */
 SEXP mi(SEXP x, SEXP y, SEXP gsquare, SEXP adjusted) {
@@ -14,7 +16,6 @@ int llx = NLEVELS(x), lly = NLEVELS(y), num = length(x);
 int *xx = INTEGER(x), *yy = INTEGER(y);
 double *res = NULL;
 SEXP result;
-
   PROTECT(result = allocVector(REALSXP, 2));
   res = REAL(result);
   if (isTRUE(adjusted))
@@ -84,16 +85,34 @@ free_and_return:
 
 }/*C_CHISQTEST*/
 
-/* conditional mutual information, to be used in C code. */
-double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
-    int num, double *df, test_e test, int scale) {
+/* conditional mutual information, to be used in C code.
+  xx - all observations of variable x
+  llx - num of categories of x
+  yy - all observations of variable y
+  lly - num of categories of y
+  zz - all observations of variable z
+  llz - num of categories of z
+  num - number of observations
+  df - degrees of freedom
+  test - symbol for the test to use
+  scale - mostly zero...
 
+*/
+
+double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
+    int num, double *df, test_e test, int scale, const char *x, const char *y, const char* sx, int sepset_length) {
+  Rprintf("%s %s, %s %d\n", x, y, sx, sepset_length);
   clock_t start, end, setup, conting, checks, cleanup, stat;
   start = clock();
   int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
   int ncomplete = 0, adj = IS_ADF(test);
   double res = 0;
-
+  // Rprintf("%d %d %d\n", *xx, *yy, *zz);
+  // for (int i = 0; i < num; i++) {
+  //   Rprintf("%d ", xx[i]);
+  // }
+  // Rprintf("\n-- %d %d %d\n", llx, lly, llz);
+  // Rprintf("num: %d scale: %d\n",num, scale);
   setup = clock();
    /* initialize the contingency table and the marginal frequencies. */
    ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
@@ -139,7 +158,9 @@ free_and_return:
   fclose(fp);
   return res;
 
-}/*C_CCHISQTEST*/
+}
+
+
 
 /* compute the mutual information from the joint and marginal frequencies. */
 double mi_kernel(int **n, int *nrowt, int *ncolt, int nrow, int ncol,

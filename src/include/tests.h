@@ -69,7 +69,7 @@ double mi_kernel(int **n, int *nrowt, int *ncolt, int nrow, int ncol,
 double x2_kernel(int **n, int *nrowt, int *ncolt, int nrow, int ncol,
     int length);
 double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
-    int num, double *df, test_e test, int scale);
+    int num, double *df, test_e test, int scale, const char *x, const char *y, const char* sx, int sepset_length);
 double cmi_kernel(int ***n, int **nrowt, int **ncolt, int *ncond, int nr,
     int nc, int nl);
 double cx2_kernel(int ***n, int **nrowt, int **ncolt, int *ncond,
@@ -128,4 +128,3 @@ int fill_2d_table(int *xx, int *yy, int ***n, int **ni, int **nj, int llx,
     int lly, int num);
 int fill_3d_table(int *xx, int *yy, int *zz, int ****n, int ***ni, int ***nj,
     int **nk, int llx, int lly, int llz, int num);
-

@@ -47,7 +47,7 @@ SEXP retval, dsep_set;
 
 /* parametric tests for discrete variables. */
 static SEXP ast_discrete(SEXP xx, SEXP yy, SEXP zz, SEXP x, SEXP y, int nf,
-    int minsize, int maxsize, test_e test, double a, int debuglevel) {
+    int minsize, int maxsize, test_e test, double a, int debuglevel, SEXP sx) {
 
 int *xptr = INTEGER(xx), *yptr = INTEGER(yy), *zptr = NULL, *subset = NULL;
 int i = 0, cursize = 0, llx = NLEVELS(xx), lly = NLEVELS(yy), llz = 0;
@@ -81,10 +81,12 @@ ddata dt = { 0 }, sub = { 0 };
       c_fast_config(sub.col, sub.m.nobs, cursize + nf, sub.nlvl, zptr, &llz, 1);
 
       if (test == MI || test == MI_ADF || test == X2 || test == X2_ADF) {
-
         /* mutual information and Pearson's X^2 asymptotic tests. */
+        const char* string_x = CHAR(STRING_ELT(x,0));
+        const char* string_y = CHAR(STRING_ELT(y,0));
+        const char* string_sx = CHAR(STRING_ELT(sx,0));
         statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df,
-                      test, (test == MI) || (test == MI_ADF));
+                      test, (test == MI) || (test == MI_ADF), string_x, string_y, string_sx, LENGTH(sx));
         PVALUE(pchisq(statistic, df, FALSE, FALSE));
 
       }/*THEN*/
@@ -294,7 +296,7 @@ covariance cov = { 0 };
 
 /* conditional linear Gaussian test. */
 static SEXP ast_micg(SEXP xx, SEXP yy, SEXP zz, SEXP x, SEXP y, int nf,
-    int minsize, int maxsize, double a, int debuglevel) {
+    int minsize, int maxsize, double a, int debuglevel, SEXP sx) {
 
 int cursize = 0, xtype = TYPEOF(xx), ytype = TYPEOF(yy);
 int i = 0, *subset = NULL;
@@ -381,7 +383,7 @@ cgdata dt = { 0 }, sub = { 0 };
           /* if both nodes are discrete, the test reverts back to a discrete
            * mutual information test. */
           statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs,
-                        &df, MI, TRUE);
+                        &df, MI, TRUE, CHAR(STRING_ELT(x,0)),CHAR(STRING_ELT(y,0)),CHAR(STRING_ELT(sx,0)), LENGTH(sx));
 
         }/*ELSE*/
 
@@ -666,7 +668,7 @@ SEXP xx, yy, zz, res = R_NilValue;
 
     /* parametric tests for discrete variables. */
     res = ast_discrete(xx, yy, zz, x, y, nf, minsize, maxsize, test_type, a,
-            debuglevel);
+            debuglevel, sx);
 
   }/*THEN*/
   else if ((test_type == COR) || (test_type == ZF) || (test_type == MI_G) ||
@@ -680,7 +682,7 @@ SEXP xx, yy, zz, res = R_NilValue;
   else if (test_type == MI_CG) {
 
     /* conditional linear Gaussian test. */
-    res = ast_micg(xx, yy, zz, x, y, nf, minsize, maxsize, a, debuglevel);
+    res = ast_micg(xx, yy, zz, x, y, nf, minsize, maxsize, a, debuglevel, sx);
 
   }/*THEN*/
   else if (IS_DISCRETE_PERMUTATION_TEST(test_type)) {
@@ -705,4 +707,3 @@ SEXP xx, yy, zz, res = R_NilValue;
   return res;
 
 }/*ALLSUBS_TEST*/
-
