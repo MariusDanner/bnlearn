@@ -11,29 +11,79 @@
 map_t conting_hashmap;
 
 
-struct ContingencyTable {
-   char*  X;
-   char*  Y;
-   char*  Z;
+typedef struct ContingencyTable {
+   char X[50];
+   char Y[50];
+   char Z[50];
    int   ***n;
    int   **ni;
    int   **nj;
    int   *nk;
-};
+} conting_table_t;
+
+char* order_concat_keys(const char* x, const char* y, const char* z) {
+  char* concat = malloc(150 * sizeof(char));
+  memset(concat,0,150);
+  char x1[50];
+  char y1[50];
+  char z1[50];
+  char temp[50];
+  strcpy(x1,x);
+  strcpy(y1,y);
+  strcpy(z1,z);
+  if(strcmp(x1,z1)>0){
+    strcpy(temp,x1);
+    strcpy(x1,z1);
+    strcpy(z1,temp);
+  }
+  if(strcmp(x1,y1)>0){
+    strcpy(temp,x1);
+    strcpy(x1,y1);
+    strcpy(y1,temp);
+  }
+  if(strcmp(y1,z1)>0){
+    strcpy(temp,y1);
+    strcpy(y1,z1);
+    strcpy(z1,temp);
+  }
+  strcpy(concat, x1);
+  strcat(concat, y1);
+  strcat(concat, z1);
+  return concat;
+}
 
 bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n, int ***ni, int ***nj, int **nk) {
+  struct ContingencyTable* value;
   if(conting_hashmap == NULL){
     conting_hashmap = hashmap_new();
+  }
+  int error = hashmap_get(conting_hashmap,order_concat_keys(x,y,z),(void**)(&value));
+  Rprintf("%d\n", error);
+  if (error == MAP_OK) {
+    n = &(value->n);
+    ni = &(value->ni);
+    nj = &(value->nj);
+    nk = &(value->nk);
+    return true;
   }
   return false;
 }
 
-void load_3d_table_into_buffer(int ****n, int ***ni, int ***nj,
-    int **nk, int llx, int lly, int llz, int num) {
+
+void load_3d_table_into_buffer(const char* x, const char* y, const char* z,int ****n, int ***ni, int ***nj,
+    int **nk) {
       if(conting_hashmap == NULL){
         conting_hashmap = hashmap_new();
       }
-      return;
+      conting_table_t* value = malloc(sizeof(conting_table_t));
+      strcpy(value->X, x);
+      strcpy(value->Y, y);
+      strcpy(value->Z, z);
+      value->n = *n;
+      value->ni = *ni;
+      value->nj = *nj;
+      value->nk = *nk;
+      hashmap_put(conting_hashmap,order_concat_keys(x,y,z),value);
     }
 
 /*  xx pointer to x observations
@@ -59,7 +109,7 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   bool buffered = false;
 
   if(sepset_length == 1){
-    Rprintf("x: %s, y: %s, z: %s\n", x, y, z);
+    //Rprintf("x: %s, y: %s, z: %s\n", x, y, z);
   }
 
   setup = clock();
@@ -70,9 +120,11 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   /* initialize the contingency table and the marginal frequencies. */
   if (!buffered) {
       ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
-      load_3d_table_into_buffer(&n, &ni, &nj, &nk, llx, lly, llz, num);
+      if (sepset_length == 1) {
+        load_3d_table_into_buffer(x, y, z,&n, &ni, &nj, &nk);
+      }
   }
-  
+
 
   conting = clock();
   /* compute the degrees of freedom. */
