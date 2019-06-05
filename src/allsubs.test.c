@@ -74,7 +74,7 @@ ddata dt = { 0 }, sub = { 0 };
 
     /* iterate over subsets. */
     do {
-    
+
       /* prepare the current subset. */
       ddata_subset_columns(&dt, &sub, subset, cursize + nf);
       /* construct the parents' configurations. */
