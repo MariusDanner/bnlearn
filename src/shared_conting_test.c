@@ -2,43 +2,37 @@
 #include "include/tests.h"
 #include "time.h"
 #include <stdbool.h>
+#include "include/hashmap.h"
+
+#define KEY_MAX_LENGTH (256)
+#define KEY_PREFIX ("")
+#define KEY_COUNT (1024*1024)
+
+map_t conting_hashmap;
+
 
 struct ContingencyTable {
-   char  X[3];
-   char  Y[3];
-   char  Z[3];
+   char*  X;
+   char*  Y;
+   char*  Z;
    int   ***n;
    int   **ni;
    int   **nj;
    int   *nk;
 };
 
-#define TABLE_SIZE 20
-
-//const int TABLE_SIZE = 20;
-struct ContingencyTable GLOBAL_TABLES[TABLE_SIZE];
-
-bool use_3d_table_buffer(const char* x, const char* y, const char* sx, int ****n, int ***ni, int ***nj, int **nk) {
-  for (int i = 0; i < TABLE_SIZE; i++) {
-    if ((strcmp(x,GLOBAL_TABLES[i].X) == 0) && (strcmp(y,GLOBAL_TABLES[i].Y) == 0) && (strcmp(sx,GLOBAL_TABLES[i].Z) == 0)) {
-      return true;
-    } else if ((strcmp(x,GLOBAL_TABLES[i].X) == 0) && (strcmp(sx,GLOBAL_TABLES[i].Y) == 0) && (strcmp(y,GLOBAL_TABLES[i].Z) == 0)) {
-      return true;
-    } else if ((strcmp(y,GLOBAL_TABLES[i].X) == 0) && (strcmp(x,GLOBAL_TABLES[i].Y) == 0) && (strcmp(sx,GLOBAL_TABLES[i].Z) == 0)) {
-      return true;
-    } else if ((strcmp(y,GLOBAL_TABLES[i].X) == 0) && (strcmp(sx,GLOBAL_TABLES[i].Y) == 0) && (strcmp(x,GLOBAL_TABLES[i].Z) == 0)) {
-      return true;
-    } else if ((strcmp(sx,GLOBAL_TABLES[i].X) == 0) && (strcmp(x,GLOBAL_TABLES[i].Y) == 0) && (strcmp(y,GLOBAL_TABLES[i].Z) == 0)) {
-      return true;
-    } else if ((strcmp(sx,GLOBAL_TABLES[i].X) == 0) && (strcmp(y,GLOBAL_TABLES[i].Y) == 0) && (strcmp(x,GLOBAL_TABLES[i].Z) == 0)) {
-      return true;
-    }
+bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n, int ***ni, int ***nj, int **nk) {
+  if(conting_hashmap == NULL){
+    conting_hashmap = hashmap_new();
   }
   return false;
 }
 
 void load_3d_table_into_buffer(int ****n, int ***ni, int ***nj,
     int **nk, int llx, int lly, int llz, int num) {
+      if(conting_hashmap == NULL){
+        conting_hashmap = hashmap_new();
+      }
       return;
     }
 
@@ -56,7 +50,7 @@ void load_3d_table_into_buffer(int ****n, int ***ni, int ***nj,
   */
 
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
-    int num, double *df, test_e test, int scale, const char *x, const char *y, int sepset_length) {
+    int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length) {
   clock_t start, end, setup, conting, checks, cleanup, stat;
   start = clock();
   int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
@@ -64,17 +58,22 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   double res = 0;
   bool buffered = false;
 
+  if(sepset_length == 1){
+    Rprintf("x: %s, y: %s, z: %s\n", x, y, z);
+  }
+
   setup = clock();
   //only if there is one conditional variable
-  // if (sepset_length == 1) {
-  //   buffered = use_3d_table_buffer(x,y,NULL, &n, &ni, &nj, &nk);
-  // }
-  //  /* initialize the contingency table and the marginal frequencies. */
-  //  if (!buffered) {
-  //    ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
-  //    load_3d_table_into_buffer(&n, &ni, &nj, &nk, llx, lly, llz, num);
-  //  }
-  ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
+  if (sepset_length == 1) {
+     buffered = use_3d_table_buffer(x, y, z, &n, &ni, &nj, &nk);
+  }
+  /* initialize the contingency table and the marginal frequencies. */
+  if (!buffered) {
+      ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
+      load_3d_table_into_buffer(&n, &ni, &nj, &nk, llx, lly, llz, num);
+  }
+  
+
   conting = clock();
   /* compute the degrees of freedom. */
   if (df)
