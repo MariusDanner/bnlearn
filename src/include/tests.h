@@ -69,7 +69,7 @@ double mi_kernel(int **n, int *nrowt, int *ncolt, int nrow, int ncol,
 double x2_kernel(int **n, int *nrowt, int *ncolt, int nrow, int ncol,
     int length);
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
-    int num, double *df, test_e test, int scale, const char *x, const char *y, const char* sx, int sepset_length);
+    int num, double *df, test_e test, int scale, const char *x, const char *y, int sepset_length);
     double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
         int num, double *df, test_e test, int scale);
 double cmi_kernel(int ***n, int **nrowt, int **ncolt, int *ncond, int nr,
