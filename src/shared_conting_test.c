@@ -78,103 +78,54 @@ int get_permutation_id(const char* x_v, const char* y_v, const char* z_v, const 
   }
 }
 
-void permutate_table(int perm_id, conting_table_t* value, int ****n, int ***ni, int ***nj, int **nk, int* llx, int* lly, int* llz){
-  
+int permutate_table(int perm_id, conting_table_t* value, int ****n, int ***ni, int ***nj, int **nk, int* llx, int* lly, int* llz){
+  *n = (int ***) Calloc3D(*llz, *llx, *lly, sizeof(int));
+  *ni = (int **) Calloc2D(*llz, *llx, sizeof(int));
+  *nj = (int **) Calloc2D(*llz, *lly, sizeof(int));
+  *nk = (int *) Calloc1D(*llz, sizeof(int));
   switch(perm_id){
     case 0:{
       Rprintf("Irgendetwas stimmt mit Hasi nicht.\n");
       break;
     }
     case 1:{
-      *n = (int ***) Calloc3D(*lly, *llx, *llz, sizeof(int));
-      *ni = (int **) Calloc2D(*lly, *llx, sizeof(int));
-      *nj = (int **) Calloc2D(*lly, *llz, sizeof(int));
-      *nk = (int *) Calloc1D(*lly, sizeof(int));
-
-      Rprintf("Memory allocated\n");
       for (int i = 0; i < *llx; i++)
         for (int j = 0; j < *lly; j++)
           for (int k = 0; k < *llz; k++) {
-            Rprintf("Swapped values: %d, %d, %d\n", i, j, k);
-            (*n)[j][i][k] = value->n[k][i][j];
+            (*n)[k][i][j] = value->n[j][i][k];
       }
-
-      Rprintf("All values Swapped\n");
-      int temp = *llz;
-      *llz = *lly;
-      *lly = temp;
-
-      Rprintf("ll's swapped\n");
       break;
     }
     case 2:{
-      *n = (int ***) Calloc3D(*llz, *lly, *llx, sizeof(int));
-      *ni = (int **) Calloc2D(*llz, *lly, sizeof(int));
-      *nj = (int **) Calloc2D(*llz, *llx, sizeof(int));
-      *nk = (int *) Calloc1D(*llz, sizeof(int));
-
       for (int i = 0; i < *llx; i++)
         for (int j = 0; j < *lly; j++)
           for (int k = 0; k < *llz; k++) {
-            (*n)[k][j][i] = value->n[k][i][j];
+            (*n)[k][i][j] = value->n[k][j][i];
       }
-
-      int temp = *llx;
-      *llx = *lly;
-      *lly = temp;
       break;
     }
     case 3:{
-      *n = (int ***) Calloc3D(*llx, *lly, *llz, sizeof(int));
-      *ni = (int **) Calloc2D(*llx, *lly, sizeof(int));
-      *nj = (int **) Calloc2D(*llx, *llz, sizeof(int));
-      *nk = (int *) Calloc1D(*llx, sizeof(int));
-
       for (int i = 0; i < *llx; i++)
         for (int j = 0; j < *lly; j++)
           for (int k = 0; k < *llz; k++) {
-            (*n)[i][j][k] = value->n[k][i][j];
+            (*n)[k][i][j] = value->n[i][j][k];
       }
-
-      int temp = *llx;
-      *llx = *llz;
-      *llz = *lly;
-      *lly = temp;
       break;
     }
     case 4:{
-      *n = (int ***) Calloc3D(*lly, *llz, *llx, sizeof(int));
-      *ni = (int **) Calloc2D(*lly, *llz, sizeof(int));
-      *nj = (int **) Calloc2D(*lly, *llx, sizeof(int));
-      *nk = (int *) Calloc1D(*lly, sizeof(int));
-
       for (int i = 0; i < *llx; i++)
         for (int j = 0; j < *lly; j++)
           for (int k = 0; k < *llz; k++) {
-            (*n)[j][k][i] = value->n[k][i][j];
+            (*n)[k][i][j] = value->n[j][k][i];
       }
-
-      int temp = *llz;
-      *llz = *llx;
-      *llx = *lly;
-      *lly = temp;
       break;
     }
     case 5:{
-      *n = (int ***) Calloc3D(*llx, *llz, *lly, sizeof(int));
-      *ni = (int **) Calloc2D(*llx, *llz, sizeof(int));
-      *nj = (int **) Calloc2D(*llx, *lly, sizeof(int));
-      *nk = (int *) Calloc1D(*llx, sizeof(int));
-
       for (int i = 0; i < *llx; i++)
         for (int j = 0; j < *lly; j++)
           for (int k = 0; k < *llz; k++) {
-            (*n)[i][k][j] = value->n[k][i][j];
+            (*n)[k][i][j] = value->n[i][k][j];
       }
-
-      int temp = *llz;
-      *llz = *llx;
-      *llx = temp;
       break;
     }
   }
@@ -188,9 +139,15 @@ void permutate_table(int perm_id, conting_table_t* value, int ****n, int ***ni, 
 
   }
 
+  int ncomplete = 0;
+  for (int k = 0; k < *llz; k++)
+    ncomplete += (*nk)[k];
+
+  return ncomplete;
+
 }
 
-bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n, int ***ni, int ***nj, int **nk, int *llx, int *lly, int *llz) {
+bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n, int ***ni, int ***nj, int **nk, int *llx, int *lly, int *llz, int *ncomplete) {
   struct ContingencyTable* value;
   if(conting_hashmap == NULL){
     conting_hashmap = hashmap_new();
@@ -200,9 +157,7 @@ bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n,
   if (error == MAP_OK) {
     
     int perm_id = get_permutation_id(value->X, value->Y, value->Z, x, y, z);
-    
-    Rprintf("perm_id: %d\n", perm_id);
-    permutate_table(perm_id, value, n, ni, nj, nk, llx, lly, llz);
+    *ncomplete = permutate_table(perm_id, value, n, ni, nj, nk, llx, lly, llz);
     
     return true;
   }
@@ -246,6 +201,7 @@ void load_3d_table_into_buffer(const char* x, const char* y, const char* z,int *
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length) {
   test_count++;
+  //Rprintf("test_count: %d\n", test_count);
   clock_t start, end, setup, conting, checks, cleanup, stat;
   start = clock();
   int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
@@ -253,15 +209,15 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   double res = 0;
   bool buffered = false;
 
-  if(sepset_length == 1){
+  /*if(sepset_length == 1){
     Rprintf("x: %s, y: %s, z: %s\n", x, y, z);
-  }
+  }*/
 
 
   setup = clock();
   //only if there is one conditional variable
   if (sepset_length == 1) {
-     buffered = use_3d_table_buffer(x, y, z, &n, &ni, &nj, &nk, &llx, &lly, &llz);
+     buffered = use_3d_table_buffer(x, y, z, &n, &ni, &nj, &nk, &llx, &lly, &llz, &ncomplete);
   }
   /* initialize the contingency table and the marginal frequencies. */
   if (!buffered) {
