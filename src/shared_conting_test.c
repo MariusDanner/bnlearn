@@ -253,8 +253,6 @@ nk = (int *) Calloc1D(llz, sizeof(int));
 
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length) {
-  test_count++;
-  Rprintf("%d\n", test_count);
   if (test != X2) {
     Rprintf("This test can't be used in that way/n");
     return -1.0;
