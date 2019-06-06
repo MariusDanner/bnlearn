@@ -85,6 +85,7 @@ free_and_return:
 
 }/*C_CHISQTEST*/
 
+
 double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale) {
   clock_t start, end, setup, conting, checks, cleanup, stat;

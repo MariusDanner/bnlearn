@@ -86,6 +86,7 @@ ddata dt = { 0 }, sub = { 0 };
         const char* string_y = CHAR(STRING_ELT(y,0));
         statistic = c_cchisqtest_better(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df,
                       test, (test == MI) || (test == MI_ADF), string_x, string_y, sub.m.names[0], cursize);
+        //statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df, test, sx);
         PVALUE(pchisq(statistic, df, FALSE, FALSE));
 
       }/*THEN*/
