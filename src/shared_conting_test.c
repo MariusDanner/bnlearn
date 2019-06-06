@@ -16,9 +16,6 @@ typedef struct ContingencyTable {
    char X[50];
    char Y[50];
    char Z[50];
-   int llx;
-   int lly;
-   int llz;
    int ***n;
    int **ni;
    int **nj;
@@ -78,76 +75,7 @@ int get_permutation_id(const char* x_v, const char* y_v, const char* z_v, const 
   }
 }
 
-int permutate_table(int perm_id, conting_table_t* value, int ****n, int ***ni, int ***nj, int **nk, int* llx, int* lly, int* llz){
-  *n = (int ***) Calloc3D(*llz, *llx, *lly, sizeof(int));
-  *ni = (int **) Calloc2D(*llz, *llx, sizeof(int));
-  *nj = (int **) Calloc2D(*llz, *lly, sizeof(int));
-  *nk = (int *) Calloc1D(*llz, sizeof(int));
-  switch(perm_id){
-    case 0:{
-      Rprintf("Irgendetwas stimmt mit Hasi nicht.\n");
-      break;
-    }
-    case 1:{
-      for (int i = 0; i < *llx; i++)
-        for (int j = 0; j < *lly; j++)
-          for (int k = 0; k < *llz; k++) {
-            (*n)[k][i][j] = value->n[j][i][k];
-      }
-      break;
-    }
-    case 2:{
-      for (int i = 0; i < *llx; i++)
-        for (int j = 0; j < *lly; j++)
-          for (int k = 0; k < *llz; k++) {
-            (*n)[k][i][j] = value->n[k][j][i];
-      }
-      break;
-    }
-    case 3:{
-      for (int i = 0; i < *llx; i++)
-        for (int j = 0; j < *lly; j++)
-          for (int k = 0; k < *llz; k++) {
-            (*n)[k][i][j] = value->n[i][j][k];
-      }
-      break;
-    }
-    case 4:{
-      for (int i = 0; i < *llx; i++)
-        for (int j = 0; j < *lly; j++)
-          for (int k = 0; k < *llz; k++) {
-            (*n)[k][i][j] = value->n[j][k][i];
-      }
-      break;
-    }
-    case 5:{
-      for (int i = 0; i < *llx; i++)
-        for (int j = 0; j < *lly; j++)
-          for (int k = 0; k < *llz; k++) {
-            (*n)[k][i][j] = value->n[i][k][j];
-      }
-      break;
-    }
-  }
-  for (int i = 0; i < *llx; i++)
-    for (int j = 0; j < *lly; j++)
-      for (int k = 0; k < *llz; k++) {
-
-        (*ni)[k][i] += (*n)[k][i][j];
-        (*nj)[k][j] += (*n)[k][i][j];
-        (*nk)[k] += (*n)[k][i][j];
-
-  }
-
-  int ncomplete = 0;
-  for (int k = 0; k < *llz; k++)
-    ncomplete += (*nk)[k];
-
-  return ncomplete;
-
-}
-
-bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n, int ***ni, int ***nj, int **nk, int *llx, int *lly, int *llz, int *ncomplete) {
+bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n, int ***ni, int ***nj, int **nk, int *llx, int *lly, int *llz, int *perm_id) {
   struct ContingencyTable* value;
   if(conting_hashmap == NULL){
     conting_hashmap = hashmap_new();
@@ -156,8 +84,8 @@ bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n,
   int error = hashmap_get(conting_hashmap,order_concat_keys(x,y,z),(void**)(&value));
   if (error == MAP_OK) {
 
-    int perm_id = get_permutation_id(value->X, value->Y, value->Z, x, y, z);
-    *ncomplete = permutate_table(perm_id, value, n, ni, nj, nk, llx, lly, llz);
+    *perm_id = get_permutation_id(value->X, value->Y, value->Z, x, y, z);
+    *n = value->n;
 
     return true;
   }
@@ -178,12 +106,137 @@ void load_3d_table_into_buffer(const char* x, const char* y, const char* z,int *
       value->ni = *ni;
       value->nj = *nj;
       value->nk = *nk;
-      value->llx = llx;
-      value->lly = lly;
-      value->llz = llz;
 
       hashmap_put(conting_hashmap,order_concat_keys(x,y,z),value);
     }
+
+/* compute the Pearson's conditional X^2 coefficient from the joint and
+ * marginal frequencies. */
+double cx2_kernel_better(int ***n, int **ni, int **nj, int *nk, int llx,
+    int lly, int llz, int perm_id) {
+
+int i = 0, j = 0, k = 0;
+double expected = 0, res = 0;
+ni = (int **) Calloc2D(llz, llx, sizeof(int));
+nj = (int **) Calloc2D(llz, lly, sizeof(int));
+nk = (int *) Calloc1D(llz, sizeof(int));
+  switch (perm_id) {
+    case 1: {
+      for (int i = 0; i < llx; i++)
+        for (int j = 0; j < lly; j++)
+          for (int k = 0; k < llz; k++) {
+            ni[k][i] += n[j][i][k];
+            nj[k][j] += n[j][i][k];
+            nk[k] += n[j][i][k];
+          }
+      for (k = 0; k < llz; k++) {
+        if (nk[k] == 0) continue;
+        for (j = 0; j < lly; j++) {
+          for (i = 0; i < llx; i++) {
+           expected = ni[k][i] * (double)nj[k][j] / nk[k];
+           if (expected != 0)
+              res += (n[j][i][k] - expected) * (n[j][i][k] - expected) / expected;
+          }/*FOR*/
+        }
+      }
+      break;
+    }
+    case 2: {
+      for (int i = 0; i < llx; i++)
+        for (int j = 0; j < lly; j++)
+          for (int k = 0; k < llz; k++) {
+
+            ni[k][i] += n[k][j][i];
+            nj[k][j] += n[k][j][i];
+            nk[k] += n[k][j][i];
+          }
+      for (k = 0; k < llz; k++) {
+        if (nk[k] == 0) continue;
+        for (j = 0; j < lly; j++) {
+          for (i = 0; i < llx; i++) {
+           expected = ni[k][i] * (double)nj[k][j] / nk[k];
+           if (expected != 0)
+              res += (n[k][j][i] - expected) * (n[k][j][i] - expected) / expected;
+          }/*FOR*/
+        }
+      }
+      break;
+    }
+    case 3: {
+      for (int i = 0; i < llx; i++)
+        for (int j = 0; j < lly; j++)
+          for (int k = 0; k < llz; k++) {
+
+            ni[k][i] += n[i][j][k];
+            nj[k][j] += n[i][j][k];
+            nk[k] += n[i][j][k];
+          }
+      for (k = 0; k < llz; k++) {
+        if (nk[k] == 0) continue;
+        for (j = 0; j < lly; j++) {
+          for (i = 0; i < llx; i++) {
+           expected = ni[k][i] * (double)nj[k][j] / nk[k];
+           if (expected != 0)
+              res += (n[i][j][k] - expected) * (n[i][j][k] - expected) / expected;
+          }/*FOR*/
+        }
+      }
+      break;
+    }
+    case 4: {
+      for (int i = 0; i < llx; i++)
+        for (int j = 0; j < lly; j++)
+          for (int k = 0; k < llz; k++) {
+
+            ni[k][i] += n[j][k][i];
+            nj[k][j] += n[j][k][i];
+            nk[k] += n[j][k][i];
+          }
+      for (k = 0; k < llz; k++) {
+        if (nk[k] == 0) continue;
+        for (j = 0; j < lly; j++) {
+          for (i = 0; i < llx; i++) {
+           expected = ni[k][i] * (double)nj[k][j] / nk[k];
+           if (expected != 0)
+              res += (n[j][k][i] - expected) * (n[j][k][i] - expected) / expected;
+          }/*FOR*/
+        }
+      }
+      break;
+    }
+    case 5: {
+      for (int i = 0; i < llx; i++)
+        for (int j = 0; j < lly; j++)
+          for (int k = 0; k < llz; k++) {
+
+            ni[k][i] += n[i][k][j];
+            nj[k][j] += n[i][k][j];
+            nk[k] += n[i][k][j];
+          }
+      for (k = 0; k < llz; k++) {
+        if (nk[k] == 0) continue;
+        for (j = 0; j < lly; j++) {
+          for (i = 0; i < llx; i++) {
+           expected = ni[k][i] * (double)nj[k][j] / nk[k];
+           if (expected != 0)
+              res += (n[i][k][j] - expected) * (n[i][k][j] - expected) / expected;
+          }/*FOR*/
+        }
+      }
+      break;
+    }
+  }
+  int ncomplete = 0;
+  for (int k = 0; k < llz; k++)
+    ncomplete += nk[k];
+
+  if (ncomplete == 0){
+    return -1.0;
+  }
+
+  return res;
+
+}/*CX2_KERNEL*/
 
 /*  xx pointer to x observations
     llx number of categories of x
@@ -201,6 +254,7 @@ void load_3d_table_into_buffer(const char* x, const char* y, const char* z,int *
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length) {
   test_count++;
+  Rprintf("%d\n", test_count);
   if (test != X2) {
     Rprintf("This test can't be used in that way/n");
     return -1.0;
@@ -214,9 +268,11 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
 
   setup = clock();
   //only if there is one conditional variable
+  int perm_id = 0;
   if (sepset_length == 1) {
-     buffered = use_3d_table_buffer(x, y, z, &n, &ni, &nj, &nk, &llx, &lly, &llz, &ncomplete);
+     buffered = use_3d_table_buffer(x, y, z, &n, &ni, &nj, &nk, &llx, &lly, &llz, &perm_id);
   }
+
   /* initialize the contingency table and the marginal frequencies. */
   if (!buffered) {
       ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
@@ -230,14 +286,19 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   if (df)
     *df = (llx - 1) * (lly - 1) * llz;
 
-  /* if there are no complete data points, return independence. */
-  if (ncomplete == 0)
-    goto free_and_return;
 
 
   checks = clock();
   /* compute the conditional mutual information or Pearson's X^2. */
-  res = cx2_kernel(n, ni, nj, nk, llx, lly, llz);
+  if (!buffered){
+    /* if there are no complete data points, return independence. */
+    if (ncomplete == 0)
+      goto free_and_return;
+    res = cx2_kernel(n, ni, nj, nk, llx, lly, llz);
+  } else {
+    res= cx2_kernel_better(n, ni, nj, nk, llx,lly,llz, perm_id);
+  }
+
 
   stat = clock();
 
