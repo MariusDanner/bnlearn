@@ -80,16 +80,19 @@ ddata dt = { 0 }, sub = { 0 };
       /* construct the parents' configurations. */
       c_fast_config(sub.col, sub.m.nobs, cursize + nf, sub.nlvl, zptr, &llz, 1);
 
-      if (test == MI || test == MI_ADF || test == X2 || test == X2_ADF) {
+      if (test == MI || test == MI_ADF|| test == X2_ADF) {
         /* mutual information and Pearson's X^2 asymptotic tests. */
+        statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df, test, (test == MI) || (test == MI_ADF));
+        PVALUE(pchisq(statistic, df, FALSE, FALSE));
+
+      }/*THEN*/
+      else if (test == X2) {
         const char* string_x = CHAR(STRING_ELT(x,0));
         const char* string_y = CHAR(STRING_ELT(y,0));
         statistic = c_cchisqtest_better(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df,
                       test, (test == MI) || (test == MI_ADF), string_x, string_y, sub.m.names[0], cursize);
-        //statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df, test, (test == MI) || (test == MI_ADF));
         PVALUE(pchisq(statistic, df, FALSE, FALSE));
-
-      }/*THEN*/
+      }
       else if (test == MI_SH) {
 
         /* shrinkage mutual information test. */
