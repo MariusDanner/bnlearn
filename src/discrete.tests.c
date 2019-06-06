@@ -79,7 +79,7 @@ free_and_return:
   double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
   FILE *fp = fopen("ci_benchmark.csv", "a");
-  fprintf(fp, "0, %f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
+  fprintf(fp, "0,0,%f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
   fclose(fp);
   return res;
 
@@ -135,7 +135,7 @@ free_and_return:
   double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
   FILE *fp = fopen("ci_benchmark.csv", "a");
-  fprintf(fp, "-1, %f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
+  fprintf(fp, "-1,0,%f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
   fclose(fp);
   return res;
 

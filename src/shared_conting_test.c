@@ -155,10 +155,10 @@ bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n,
 
   int error = hashmap_get(conting_hashmap,order_concat_keys(x,y,z),(void**)(&value));
   if (error == MAP_OK) {
-    
+
     int perm_id = get_permutation_id(value->X, value->Y, value->Z, x, y, z);
     *ncomplete = permutate_table(perm_id, value, n, ni, nj, nk, llx, lly, llz);
-    
+
     return true;
   }
   return false;
@@ -254,7 +254,7 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
 
 free_and_return:
 
-  
+
   //Free3D(n, llz, llx);
   //Free2D(ni, llz);
   //Free2D(nj, llz);
@@ -266,7 +266,7 @@ free_and_return:
   double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
   FILE *fp = fopen("ci_benchmark.csv", "a");
-  fprintf(fp, "%d, %f,%f,%f,%f,%f\n", sepset_length, time1, time2, time3, time4, time5);
+  fprintf(fp, "%d, %d, %f,%f,%f,%f,%f\n", sepset_length, buffered, time1, time2, time3, time4, time5);
   fclose(fp);
   return res;
 
