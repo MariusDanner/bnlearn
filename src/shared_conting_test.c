@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include "include/hashmap.h"
 
-int test_count = 0;
-
 #define KEY_MAX_LENGTH (256)
 #define KEY_PREFIX ("")
 #define KEY_COUNT (1024*1024)
@@ -200,12 +198,11 @@ void load_3d_table_into_buffer(const char* x, const char* y, const char* z,int *
 
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length) {
-  test_count++;
   if (test != X2) {
     Rprintf("This test can't be used in that way/n");
     return -1.0;
   }
-  clock_t start, end, setup, conting, checks, cleanup, stat;
+  clock_t start, end, setup, conting, degrees, cleanup, stat;
   start = clock();
   int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
   int ncomplete = 0;
@@ -230,12 +227,12 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   if (df)
     *df = (llx - 1) * (lly - 1) * llz;
 
+
+  degrees = clock();
   /* if there are no complete data points, return independence. */
   if (ncomplete == 0)
     goto free_and_return;
 
-
-  checks = clock();
   /* compute the conditional mutual information or Pearson's X^2. */
   res = cx2_kernel(n, ni, nj, nk, llx, lly, llz);
 
@@ -251,8 +248,8 @@ free_and_return:
   cleanup = clock();
   double time1 = ((double) (setup - start)) / CLOCKS_PER_SEC;
   double time2 = ((double) (conting - setup)) / CLOCKS_PER_SEC;
-  double time3 = ((double) (checks - conting)) / CLOCKS_PER_SEC;
-  double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
+  double time3 = ((double) (degrees - conting)) / CLOCKS_PER_SEC;
+  double time4 = ((double) (stat - degrees)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
   FILE *fp = fopen("ci_benchmark.csv", "a");
   fprintf(fp, "%d, %d, %f,%f,%f,%f,%f\n", sepset_length, buffered, time1, time2, time3, time4, time5);
