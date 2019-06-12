@@ -76,7 +76,7 @@ free_and_return:
 }/*C_CHISQTEST*/
 
 double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
-    int num, double *df, test_e test, int scale, int sepset_length) {
+    int num, double *df, test_e test, int scale) {
   if (test != X2) {
     Rprintf("This test can't be used in that way/n");
     return -1.0;
@@ -112,7 +112,7 @@ free_and_return:
   double time4 = ((double) (stat - degrees)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
   FILE *fp = fopen("ci_benchmark.csv", "a");
-  fprintf(fp, "%d,0,%f,%f,%f,%f,%f\n",sepset_length, time1, time2, time3, time4, time5);
+  fprintf(fp, "-1,0,%f,%f,%f,%f,%f\n", time1, time2, time3, time4, time5);
   fclose(fp);
   return res;
 

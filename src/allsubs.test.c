@@ -82,7 +82,7 @@ ddata dt = { 0 }, sub = { 0 };
 
       if (test == MI || test == MI_ADF|| test == X2_ADF) {
         /* mutual information and Pearson's X^2 asymptotic tests. */
-        statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df, test, (test == MI) || (test == MI_ADF), cursize);
+        statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs, &df, test, (test == MI) || (test == MI_ADF));
         PVALUE(pchisq(statistic, df, FALSE, FALSE));
 
       }/*THEN*/
@@ -387,7 +387,7 @@ cgdata dt = { 0 }, sub = { 0 };
           /* if both nodes are discrete, the test reverts back to a discrete
            * mutual information test. */
           statistic = c_cchisqtest(xptr, llx, yptr, lly, zptr, llz, sub.m.nobs,
-                        &df, MI, TRUE, cursize);
+                        &df, MI, TRUE);
 
         }/*ELSE*/
 
