@@ -1,4 +1,4 @@
-Package: bnlearn
+Package: bnlearnsharednocopy
 Type: Package
 Title: Bayesian Network Structure Learning, Parameter Learning and
         Inference
