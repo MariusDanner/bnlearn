@@ -257,7 +257,7 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     Rprintf("This test can't be used in that way/n");
     return -1.0;
   }
-  clock_t start, end, setup, conting, checks, cleanup, stat;
+  clock_t start, end, setup, conting, degrees, cleanup, stat;
   start = clock();
   int ***n = NULL, **ni = NULL, **nj = NULL, *nk = NULL;
   int ncomplete = 0;
@@ -278,7 +278,6 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
         load_3d_table_into_buffer(x, y, z, &n, &ni, &nj, &nk, llx, lly, llz);
       }
   }
-
   conting = clock();
   /* compute the degrees of freedom. */
   if (df)
@@ -286,7 +285,7 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
 
 
 
-  checks = clock();
+  degrees = clock();
   /* compute the conditional mutual information or Pearson's X^2. */
   if (!buffered){
     /* if there are no complete data points, return independence. */
@@ -310,8 +309,8 @@ free_and_return:
   cleanup = clock();
   double time1 = ((double) (setup - start)) / CLOCKS_PER_SEC;
   double time2 = ((double) (conting - setup)) / CLOCKS_PER_SEC;
-  double time3 = ((double) (checks - conting)) / CLOCKS_PER_SEC;
-  double time4 = ((double) (stat - checks)) / CLOCKS_PER_SEC;
+  double time3 = ((double) (degrees - conting)) / CLOCKS_PER_SEC;
+  double time4 = ((double) (stat - degrees)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
   FILE *fp = fopen("ci_benchmark.csv", "a");
   fprintf(fp, "%d, %d, %f,%f,%f,%f,%f\n", sepset_length, buffered, time1, time2, time3, time4, time5);
