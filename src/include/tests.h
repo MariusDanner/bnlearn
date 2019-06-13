@@ -1,5 +1,17 @@
 #include "data.structures.h"
+#include "hashmap.h"
 
+map_t conting_hashmap;
+
+typedef struct ContingencyTable {
+   char X[50];
+   char Y[50];
+   char Z[50];
+   int ***n;
+   int **ni;
+   int **nj;
+   int *nk;
+} conting_table_t;
 /* enum for tests, to be matched from the label string passed down from R. */
 typedef enum {
   ENOTEST   =  0, /* error code, no such test. */
