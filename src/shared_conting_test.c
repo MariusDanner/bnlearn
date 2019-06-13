@@ -2,26 +2,10 @@
 #include "include/tests.h"
 #include "time.h"
 #include <stdbool.h>
-#include "include/hashmap.h"
 
 #define KEY_MAX_LENGTH (256)
 #define KEY_PREFIX ("")
 #define KEY_COUNT (1024*1024)
-
-map_t conting_hashmap;
-
-typedef struct ContingencyTable {
-   char X[50];
-   char Y[50];
-   char Z[50];
-   int llx;
-   int lly;
-   int llz;
-   int ***n;
-   int **ni;
-   int **nj;
-   int *nk;
-} conting_table_t;
 
 char* order_concat_keys(const char* x, const char* y, const char* z) {
   char* concat = malloc(150 * sizeof(char));

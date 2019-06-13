@@ -142,6 +142,7 @@ ddata dt = { 0 }, sub = { 0 };
     Free1D(subset);
 
   }/*FOR*/
+  conting_hashmap = NULL;
 
   Free1D(zptr);
   FreeDDT(dt, FALSE);
@@ -150,6 +151,7 @@ ddata dt = { 0 }, sub = { 0 };
   return ast_prepare_retval(pvalue, min_pvalue, max_pvalue, a, NULL, 0);
 
 }/*AST_DISCRETE*/
+
 
 /* parametric tests for Gaussian variables. */
 static SEXP ast_gaustests(SEXP xx, SEXP yy, SEXP zz, SEXP x, SEXP y, int nf,
