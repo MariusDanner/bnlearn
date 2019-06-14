@@ -141,7 +141,9 @@ ddata dt = { 0 }, sub = { 0 };
     Free1D(subset);
 
   }/*FOR*/
-  conting_hashmap = NULL;
+  if(minsize >= 2){
+    conting_hashmap = NULL;
+  }
 
   Free1D(zptr);
   FreeDDT(dt, FALSE);
