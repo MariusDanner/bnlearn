@@ -5,6 +5,7 @@ pc.stable.backend = function(x, cluster = NULL, whitelist, blacklist, test,
   nodes = names(x)
   nnodes = length(nodes)
   .Call(call_setup_lookup, n = nnodes, nodes = nodes)
+
   mb = structure(vector(length(nodes), mode = "list"), names = nodes)
   skeleton = subsets(nodes, 2)
   node.pairs =

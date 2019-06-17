@@ -14,17 +14,21 @@ SEXP setup_lookup(SEXP n, SEXP nodes) {
   int* nptr = INTEGER(n);
   var_count = *nptr;
   for (int i = 0; i < *nptr; i++) {
-    const char* string_x = CHAR(STRING_ELT(nodes,i));
+    char* string_x = CHAR(STRING_ELT(nodes,i));
     char* string_y = malloc(strlen(string_x));
     strcpy(string_y, string_x);
     hashmap_put(reverse_lookup_hashmap, string_y, i);
   }
+
+  /* Do not needs this in final implementations
   for (int i = 0; i < *nptr; i++) {
-    const char* string_x = CHAR(STRING_ELT(nodes,i));
+    char* string_x = CHAR(STRING_ELT(nodes,i));
     int id;
     int error = hashmap_get(reverse_lookup_hashmap, string_x, (void*)(&id));
   }
-  table_buffer = calloc((*nptr) * (*nptr) * (*nptr) , sizeof(conting_table_t*));
+  */ 
+
+  table_buffer = malloc((*nptr) * (*nptr) * (*nptr) * sizeof(conting_table_t*));
   return n;
 }
 
@@ -252,7 +256,7 @@ nk = (int *) Calloc1D(llz, sizeof(int));
   */
 
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
-    int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length) {
+    int num, double *df, test_e test, int scale, char *x, char *y, char *z, int sepset_length) {
   int xid, yid, zid;
   if (sepset_length == 1) {
     hashmap_get(reverse_lookup_hashmap, x, (void*)(&xid));
