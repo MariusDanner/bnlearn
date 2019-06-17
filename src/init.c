@@ -8,6 +8,8 @@
 static const R_CallMethodDef CallEntries[] = {
   CALL_ENTRY(all_equal_bn, 2),
   CALL_ENTRY(allsubs_test, 12),
+  CALL_ENTRY(setup_lookup, 2),
+  CALL_ENTRY(cleanup_lookup, 0),
   CALL_ENTRY(alpha_star, 3),
   CALL_ENTRY(amat2arcs, 2),
   CALL_ENTRY(aracne, 5),
@@ -104,4 +106,3 @@ void R_init_bnlearn(DllInfo *dll) {
   R_useDynamicSymbols(dll, FALSE);
 
 }/*R_INIT_BNLEARN*/
-

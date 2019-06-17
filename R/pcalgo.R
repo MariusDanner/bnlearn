@@ -4,6 +4,7 @@ pc.stable.backend = function(x, cluster = NULL, whitelist, blacklist, test,
 
   nodes = names(x)
   nnodes = length(nodes)
+  .Call(call_setup_lookup, n = nnodes, nodes = nodes)
   mb = structure(vector(length(nodes), mode = "list"), names = nodes)
   skeleton = subsets(nodes, 2)
   node.pairs =
@@ -62,7 +63,7 @@ pc.stable.backend = function(x, cluster = NULL, whitelist, blacklist, test,
   skeleton = cache.structure(nodes, arcs.rbind(skeleton, skeleton, reverse2 = TRUE))
   # attach the d-separating sets.
   attr(skeleton, "dsep.set") = node.pairs
-
+  .Call(call_cleanup_lookup)
   return(skeleton)
 
 }#PC.STABLE.BACKEND
@@ -146,4 +147,3 @@ pc.heuristic = function(pair, data, alpha, B, whitelist, blacklist, test,
     max.adjacent = max(length(nbr1), length(nbr2))))
 
 }#PC.HEURISTIC
-

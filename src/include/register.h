@@ -2,6 +2,8 @@
 /* functions registered to make them visible to .Call() in R. */
 extern SEXP all_equal_bn(SEXP, SEXP);
 extern SEXP allsubs_test(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP setup_lookup(SEXP, SEXP);
+extern SEXP cleanup_lookup();
 extern SEXP alpha_star(SEXP, SEXP, SEXP);
 extern SEXP amat2arcs(SEXP, SEXP);
 extern SEXP aracne(SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -89,4 +91,3 @@ extern SEXP tree_directions(SEXP, SEXP, SEXP, SEXP);
 extern SEXP unique_arcs(SEXP, SEXP, SEXP);
 extern SEXP vstructures(SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP which_undirected(SEXP, SEXP);
-

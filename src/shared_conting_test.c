@@ -9,52 +9,71 @@ int test_count = 0;
 #define KEY_PREFIX ("")
 #define KEY_COUNT (1024*1024)
 
-char* order_concat_keys(const char* x, const char* y, const char* z) {
-  char* concat = malloc(150 * sizeof(char));
-  memset(concat,0,150);
-  char x1[50];
-  char y1[50];
-  char z1[50];
-  char temp[50];
-  strcpy(x1,x);
-  strcpy(y1,y);
-  strcpy(z1,z);
-  if(strcmp(x1,z1)>0){
-    strcpy(temp,x1);
-    strcpy(x1,z1);
-    strcpy(z1,temp);
+SEXP setup_lookup(SEXP n, SEXP nodes) {
+  reverse_lookup_hashmap = hashmap_new();
+  int* nptr = INTEGER(n);
+  var_count = *nptr;
+  for (int i = 0; i < *nptr; i++) {
+    const char* string_x = CHAR(STRING_ELT(nodes,i));
+    char* string_y = malloc(strlen(string_x));
+    strcpy(string_y, string_x);
+    hashmap_put(reverse_lookup_hashmap, string_y, i);
   }
-  if(strcmp(x1,y1)>0){
-    strcpy(temp,x1);
-    strcpy(x1,y1);
-    strcpy(y1,temp);
+  for (int i = 0; i < *nptr; i++) {
+    const char* string_x = CHAR(STRING_ELT(nodes,i));
+    int id;
+    int error = hashmap_get(reverse_lookup_hashmap, string_x, (void*)(&id));
   }
-  if(strcmp(y1,z1)>0){
-    strcpy(temp,y1);
-    strcpy(y1,z1);
-    strcpy(z1,temp);
-  }
-  strcpy(concat, x1);
-  strcat(concat, y1);
-  strcat(concat, z1);
-  return concat;
+  table_buffer = calloc((*nptr) * (*nptr) * (*nptr) , sizeof(conting_table_t*));
+  return n;
 }
 
-int get_permutation_id(const char* x_v, const char* y_v, const char* z_v, const char* x_i, const char* y_i, const char* z_i){
-  if(strcmp(x_v, x_i)==0){
-    if(strcmp(y_v, y_i)==0){
+SEXP cleanup_lookup(){
+  hashmap_free(reverse_lookup_hashmap);
+  for (int i = 0; i < var_count * var_count * var_count; i++) {
+    if (table_buffer != NULL) {
+      free(table_buffer[i]);
+    }
+  }
+  free(table_buffer);
+}
+
+int get_key(int x, int y, int z) {
+  int swap;
+  if (x > z) {
+    swap = z;
+    z = x;
+    x = swap;
+  }
+  if (x > y) {
+    swap = y;
+    y = x;
+    x = swap;
+  }
+  if (y > z){
+    swap = y;
+    y = z;
+    z = swap;
+  }
+  return (var_count * var_count * x + var_count * y + z);
+
+}
+
+int get_permutation_id(int x_v, int y_v, int z_v, int x_i, int y_i, int z_i){
+  if(x_v == x_i){
+    if(y_v == y_i){
       return 0;
     } else{
       return 1;
     }
-  } else if(strcmp(x_v, y_i)==0){
-    if(strcmp(y_v, x_i)==0){
+  } else if(x_v == y_i){
+    if(y_v == x_i){
       return 2;
     } else{
       return 3;
     }
   } else{
-    if(strcmp(y_v, x_i)==0){
+    if(y_v == x_i){
       return 4;
     } else{
       return 5;
@@ -62,16 +81,13 @@ int get_permutation_id(const char* x_v, const char* y_v, const char* z_v, const 
   }
 }
 
-bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n, int ***ni, int ***nj, int **nk, int *llx, int *lly, int *llz, int *perm_id) {
+bool use_3d_table_buffer(int x, int y, int z, int ****n, int ***ni, int ***nj, int **nk, int *llx, int *lly, int *llz, int *perm_id) {
   struct ContingencyTable* value;
-  if(conting_hashmap == NULL){
-    conting_hashmap = hashmap_new();
-  }
 
-  int error = hashmap_get(conting_hashmap,order_concat_keys(x,y,z),(void**)(&value));
-  if (error == MAP_OK) {
+  value = table_buffer[get_key(x,y,z)];
+  if (value != NULL) {
 
-    *perm_id = get_permutation_id(value->X, value->Y, value->Z, x, y, z);
+    *perm_id = get_permutation_id(value->x, value->y, value->z, x, y, z);
     *n = value->n;
 
     return true;
@@ -80,21 +96,18 @@ bool use_3d_table_buffer(const char* x, const char* y, const char* z, int ****n,
 }
 
 
-void load_3d_table_into_buffer(const char* x, const char* y, const char* z,int ****n, int ***ni, int ***nj,
+void load_3d_table_into_buffer(int x, int y, int z,int ****n, int ***ni, int ***nj,
     int **nk, int llx, int lly, int llz) {
-      if(conting_hashmap == NULL){
-        conting_hashmap = hashmap_new();
-      }
       conting_table_t* value = malloc(sizeof(conting_table_t));
-      strcpy(value->X, x);
-      strcpy(value->Y, y);
-      strcpy(value->Z, z);
+      value->x = x;
+      value->y = y;
+      value->z = z;
       value->n = *n;
       value->ni = *ni;
       value->nj = *nj;
       value->nk = *nk;
 
-      hashmap_put(conting_hashmap,order_concat_keys(x,y,z),value);
+      table_buffer[get_key(x,y,z)] = value;
     }
 
 /* compute the Pearson's conditional X^2 coefficient from the joint and
@@ -240,6 +253,13 @@ nk = (int *) Calloc1D(llz, sizeof(int));
 
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length) {
+  int xid, yid, zid;
+  if (sepset_length == 1) {
+    hashmap_get(reverse_lookup_hashmap, x, (void*)(&xid));
+    hashmap_get(reverse_lookup_hashmap, y, (void*)(&yid));
+    hashmap_get(reverse_lookup_hashmap, z, (void*)(&zid));
+  }
+
   if (test != X2) {
     Rprintf("This test can't be used in that way/n");
     return -1.0;
@@ -255,14 +275,15 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   //only if there is one conditional variable
   int perm_id = 0;
   if (sepset_length == 1) {
-     buffered = use_3d_table_buffer(x, y, z, &n, &ni, &nj, &nk, &llx, &lly, &llz, &perm_id);
+     buffered = use_3d_table_buffer(xid, yid, zid, &n, &ni, &nj, &nk, &llx, &lly, &llz, &perm_id);
   }
 
   /* initialize the contingency table and the marginal frequencies. */
   if (!buffered) {
+    //Rprintf("%s %s %s\n", x, y, z);
       ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
       if (sepset_length == 1) {
-        load_3d_table_into_buffer(x, y, z, &n, &ni, &nj, &nk, llx, lly, llz);
+        load_3d_table_into_buffer(xid, yid, zid, &n, &ni, &nj, &nk, llx, lly, llz);
       }
   }
   conting = clock();
@@ -299,9 +320,9 @@ free_and_return:
   double time3 = ((double) (degrees - conting)) / CLOCKS_PER_SEC;
   double time4 = ((double) (stat - degrees)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
-  FILE *fp = fopen("ci_benchmark.csv", "a");
-  fprintf(fp, "%d, %d, %f,%f,%f,%f,%f\n", sepset_length, buffered, time1, time2, time3, time4, time5);
-  fclose(fp);
+  // FILE *fp = fopen("ci_benchmark.csv", "a");
+  // fprintf(fp, "%d, %d, %f,%f,%f,%f,%f\n", sepset_length, buffered, time1, time2, time3, time4, time5);
+  // fclose(fp);
   return res;
 
 }

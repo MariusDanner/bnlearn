@@ -1,17 +1,20 @@
 #include "data.structures.h"
 #include "hashmap.h"
 
-map_t conting_hashmap;
+map_t reverse_lookup_hashmap;
 
 typedef struct ContingencyTable {
-   char X[50];
-   char Y[50];
-   char Z[50];
+   int x;
+   int y;
+   int z;
    int ***n;
    int **ni;
    int **nj;
    int *nk;
 } conting_table_t;
+
+conting_table_t** table_buffer;
+int var_count;
 /* enum for tests, to be matched from the label string passed down from R. */
 typedef enum {
   ENOTEST   =  0, /* error code, no such test. */
@@ -80,6 +83,8 @@ double mi_kernel(int **n, int *nrowt, int *ncolt, int nrow, int ncol,
     int length);
 double x2_kernel(int **n, int *nrowt, int *ncolt, int nrow, int ncol,
     int length);
+SEXP setup_lookup(SEXP n, SEXP nodes);
+SEXP cleanup_lookup();
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, const char *x, const char *y, const char *z, int sepset_length);
     double c_cchisqtest(int *xx, int llx, int *yy, int lly, int *zz, int llz,
