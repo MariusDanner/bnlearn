@@ -19,16 +19,7 @@ SEXP setup_lookup(SEXP n, SEXP nodes) {
     strcpy(string_y, string_x);
     hashmap_put(reverse_lookup_hashmap, string_y, i);
   }
-
-  /* Do not needs this in final implementations
-  for (int i = 0; i < *nptr; i++) {
-    char* string_x = CHAR(STRING_ELT(nodes,i));
-    int id;
-    int error = hashmap_get(reverse_lookup_hashmap, string_x, (void*)(&id));
-  }
-  */ 
-
-  table_buffer = malloc((*nptr) * (*nptr) * (*nptr) * sizeof(conting_table_t*));
+  table_buffer = calloc((*nptr) * (*nptr) * (*nptr), sizeof(conting_table_t*));
   return n;
 }
 
@@ -257,13 +248,14 @@ nk = (int *) Calloc1D(llz, sizeof(int));
 
 double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
     int num, double *df, test_e test, int scale, char *x, char *y, char *z, int sepset_length) {
-  int xid, yid, zid;
+  int *xid = calloc(1, sizeof(int));
+  int *yid = calloc(1, sizeof(int));
+  int *zid = calloc(1, sizeof(int));
   if (sepset_length == 1) {
-    hashmap_get(reverse_lookup_hashmap, x, (void*)(&xid));
-    hashmap_get(reverse_lookup_hashmap, y, (void*)(&yid));
-    hashmap_get(reverse_lookup_hashmap, z, (void*)(&zid));
+    hashmap_get(reverse_lookup_hashmap, x, (void*)(xid));
+    hashmap_get(reverse_lookup_hashmap, y, (void*)(yid));
+    hashmap_get(reverse_lookup_hashmap, z, (void*)(zid));
   }
-
   if (test != X2) {
     Rprintf("This test can't be used in that way/n");
     return -1.0;
@@ -274,20 +266,18 @@ double c_cchisqtest_better(int *xx, int llx, int *yy, int lly, int *zz, int llz,
   int ncomplete = 0;
   double res = 0;
   bool buffered = false;
-
   setup = clock();
   //only if there is one conditional variable
   int perm_id = 0;
   if (sepset_length == 1) {
-     buffered = use_3d_table_buffer(xid, yid, zid, &n, &ni, &nj, &nk, &llx, &lly, &llz, &perm_id);
+    buffered = use_3d_table_buffer(*xid, *yid, *zid, &n, &ni, &nj, &nk, &llx, &lly, &llz, &perm_id);
   }
-
   /* initialize the contingency table and the marginal frequencies. */
   if (!buffered) {
-    //Rprintf("%s %s %s\n", x, y, z);
+    // Rprintf("%s %s %s\n", x, y, z);
       ncomplete = fill_3d_table(xx, yy, zz, &n, &ni, &nj, &nk, llx, lly, llz, num);
       if (sepset_length == 1) {
-        load_3d_table_into_buffer(xid, yid, zid, &n, &ni, &nj, &nk, llx, lly, llz);
+        load_3d_table_into_buffer(*xid, *yid, *zid, &n, &ni, &nj, &nk, llx, lly, llz);
       }
   }
   conting = clock();
