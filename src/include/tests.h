@@ -13,6 +13,10 @@ typedef struct ContingencyTable {
    int *nk;
 } conting_table_t;
 
+typedef struct HashValue {
+  int id;
+} hash_value_t;
+
 conting_table_t** table_buffer;
 int var_count;
 /* enum for tests, to be matched from the label string passed down from R. */
