@@ -83,7 +83,7 @@ bool use_3d_table_buffer(int x, int y, int z, int ****n, int ***ni, int ***nj, i
 
   value = table_buffer[get_key(x,y,z)];
   if (value != NULL) {
-    Rprintf("buffered\n");
+    //Rprintf("buffered\n");
     *perm_id = get_permutation_id(value->x, value->y, value->z, x, y, z);
     *n = value->n;
 
