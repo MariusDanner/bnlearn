@@ -317,9 +317,9 @@ free_and_return:
   double time3 = ((double) (degrees - conting)) / CLOCKS_PER_SEC;
   double time4 = ((double) (stat - degrees)) / CLOCKS_PER_SEC;
   double time5 = ((double) (cleanup - stat)) / CLOCKS_PER_SEC;
-  // FILE *fp = fopen("ci_benchmark.csv", "a");
-  // fprintf(fp, "%d, %d, %f,%f,%f,%f,%f\n", sepset_length, buffered, time1, time2, time3, time4, time5);
-  // fclose(fp);
+  FILE *fp = fopen("ci_benchmark.csv", "a");
+  fprintf(fp, "%d, %d, %f,%f,%f,%f,%f\n", sepset_length, buffered, time1, time2, time3, time4, time5);
+  fclose(fp);
   return res;
 
 }
